@@ -25,3 +25,4 @@ chezmoi diff
 ## Domain 文档
 
 - [Git](dot_config/git/readme.md)
+- [Agent](agent/readme.md)

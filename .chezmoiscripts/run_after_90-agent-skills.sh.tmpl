@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -eu
+
+source_root={{ joinPath .chezmoi.sourceDir "agent/skills" | quote }}
+target_root={{ joinPath .chezmoi.homeDir ".agents/skills" | quote }}
+
+mkdir -p "$target_root"
+
+for skill_source in "$source_root"/*; do
+    [ -d "$skill_source" ] || continue
+
+    skill_name=${skill_source##*/}
+    skill_target="$target_root/$skill_name"
+
+    mkdir -p "$skill_target"
+    rsync --archive --delete "$skill_source/" "$skill_target/"
+done
