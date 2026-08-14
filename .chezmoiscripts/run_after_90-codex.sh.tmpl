@@ -1,5 +1,0 @@
-#!/bin/sh
-
-exec sh {{ joinPath .chezmoi.sourceDir "agent/sync-codex.sh" | quote }} \
-    {{ joinPath .chezmoi.sourceDir "agent" | quote }} \
-    {{ .chezmoi.homeDir | quote }}

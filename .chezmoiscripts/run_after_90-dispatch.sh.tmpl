@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -eu
+
+source_dir={{ .chezmoi.sourceDir | quote }}
+home_dir={{ .chezmoi.homeDir | quote }}
+
+sh "$source_dir/agent/targets/codex.sh" "$source_dir/agent" "$home_dir"

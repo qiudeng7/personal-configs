@@ -7,9 +7,10 @@ Agent 配置的唯一来源，当前只组装到 Codex，包含通用指令和 S
 ```text
 agent/
 ├── AGENTS.md
-├── sync-codex.sh
-└── skills/
-    └── gh-proxy/
+├── skills/
+│   └── gh-proxy/
+└── targets/
+    └── codex.sh
 ```
 
 `AGENTS.md` 是 Codex 的用户级指令。`skills/` 中的每个子目录代表一个独立 Skill。
@@ -19,10 +20,10 @@ agent/
 执行 `chezmoi apply` 或 `chezmoi update` 时，chezmoi 会在完成普通配置同步后运行：
 
 ```text
-.chezmoiscripts/run_after_90-codex.sh.tmpl
+.chezmoiscripts/run_after_90-dispatch.sh.tmpl
 ```
 
-`.chezmoiscripts` 中的文件只是 chezmoi 生命周期入口，实际同步逻辑与 Agent source 一起位于 `agent/sync-codex.sh`。它执行以下同步：
+`.chezmoiscripts` 中的 dispatcher 只负责生命周期调度，并显式调用 `agent/targets/codex.sh`，不会自动扫描或执行其他脚本。Codex target 执行以下同步：
 
 ```text
 agent/AGENTS.md  → ~/.codex/AGENTS.md
