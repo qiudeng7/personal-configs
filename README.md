@@ -19,7 +19,7 @@ type(domain): 中文消息
 
 ```text
 feat(git-hooks): 添加提交信息校验
-build-tools(api/auth-v2): 更新登录服务构建流程
+build-tools(api/auth-service): 更新登录服务构建流程
 ```
 
 Hook 使用 Python 3 运行。
