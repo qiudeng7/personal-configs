@@ -1,0 +1,3 @@
+# 对所有仓库启用统一的提交信息校验 Hook
+[core]
+	hooksPath = ~/.config/git/hooks
