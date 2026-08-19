@@ -26,16 +26,9 @@ ESA方面，主要有两个域名，一个是chongqing-yusheng.cn 是公司的�
 
 ## 飞书
 
-用户一般用飞书记录会议，也会把项目资料、会议纪要、云文档、表格、多维表格等放在飞书。
+用户主要用飞书保存会议 AI 整理稿、逐字原文和妙记。本机已安装飞书官方命令行工具 `lark-cli`（包名 `@larksuite/cli`）。读取这类会议记录时，使用 `lark-meeting-records` skill；普通开发、UI、Markdown、表格或非飞书会议任务不要调用飞书能力。
 
-本机已安装飞书官方命令行工具 `lark-cli`（包名 `@larksuite/cli`）。需要访问飞书资料时，优先使用 `lark-cli` 和本机安装的 `lark-*` skills，不要只依赖浏览器搜索或人工猜 token。
-
-常用流程：
-- 先用 `lark-cli auth status --json --verify` 检查当前登录态和 user/bot 身份。
-- 搜索云文档、Wiki、表格、多维表格等资源时，优先用 `lark-cli drive +search`；如果缺少 `search:docs:read`，按 CLI 提示发起最小增量授权。
-- 读取飞书 Docx / Wiki 文档正文时，用 `lark-cli docs +fetch`。
-- 遇到 Wiki 链接或不确定资源类型时，先用 `lark-cli drive +inspect` 识别真实类型和 token。
-- 文档里嵌入表格、多维表格、画板、妙记等资源时，先从文档中提取 token，再切到对应的 `lark-sheets`、`lark-base`、`lark-whiteboard`、`lark-minutes` 等技能继续处理。
+不要自动运行 `lark-cli update`，它可能重新同步上游完整的 `lark-*` skill bundle。更新 CLI 或恢复其他飞书能力前先征得用户同意。
 
 Agent 发起飞书授权时，优先用 split-flow：
 - 使用 `lark-cli auth login --scope "<scope>" --no-wait --json` 或按业务域 `--domain` 发起授权。
