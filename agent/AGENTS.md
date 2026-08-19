@@ -24,19 +24,6 @@ ESA方面，主要有两个域名，一个是chongqing-yusheng.cn 是公司的�
 
 镜像仓库统一使用个人仓库，地址是 `crpi-hvru9zd4pbpi8a42.cn-shanghai.personal.cr.aliyuncs.com`，但是分公开和私有两类namespace分别是`qiudeng-private`和`qiudeng-public`，容器仓库登录凭证在infisical。
 
-## 飞书
-
-用户主要用飞书保存会议 AI 整理稿、逐字原文和妙记。本机已安装飞书官方命令行工具 `lark-cli`（包名 `@larksuite/cli`）。读取这类会议记录时，使用 `lark-meeting-records` skill；普通开发、UI、Markdown、表格或非飞书会议任务不要调用飞书能力。
-
-不要自动运行 `lark-cli update`，它可能重新同步上游完整的 `lark-*` skill bundle。更新 CLI 或恢复其他飞书能力前先征得用户同意。
-
-Agent 发起飞书授权时，优先用 split-flow：
-- 使用 `lark-cli auth login --scope "<scope>" --no-wait --json` 或按业务域 `--domain` 发起授权。
-- 把返回的 `verification_url` 原样发给用户，并用 `lark-cli auth qrcode` 生成二维码展示。
-- 等用户确认完成授权后，再由 Agent 执行 `lark-cli auth login --device-code <device_code>` 完成登录。
-- 不要明文输出 appSecret、accessToken 等密钥。
-
-
 ## 开发workflow
 
 如果你要处理的是相对正式的代码库，那基本上就是要开始进行正式的开发工作了，优先考虑这种工作方式：
