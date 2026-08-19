@@ -8,12 +8,17 @@ Agent 配置的唯一来源，当前只组装到 Codex，包含通用指令和 S
 agent/
 ├── AGENTS.md
 ├── skills/
+│   ├── ai-sdk/
 │   └── gh-proxy/
 └── targets/
     └── codex.sh
 ```
 
 `AGENTS.md` 是 Codex 的用户级指令。`skills/` 中的每个子目录代表一个独立 Skill。
+
+其中 `ai-sdk` 来自 Vercel 官方仓库的
+[`vercel/ai/skills/use-ai-sdk`](https://github.com/vercel/ai/tree/main/skills/use-ai-sdk)，
+并在 Skill 目录中保留其 Apache-2.0 许可证。
 
 ## 同步流程
 
