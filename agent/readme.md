@@ -9,7 +9,9 @@ agent/
 ├── AGENTS.md
 ├── skills/
 │   ├── ai-sdk/
-│   └── gh-proxy/
+│   ├── gh-proxy/
+│   ├── lark-meeting-records/
+│   └── ui-vercel/
 └── targets/
     └── codex.sh
 ```
@@ -19,6 +21,11 @@ agent/
 其中 `ai-sdk` 来自 Vercel 官方仓库的
 [`vercel/ai/skills/use-ai-sdk`](https://github.com/vercel/ai/tree/main/skills/use-ai-sdk)，
 并在 Skill 目录中保留其 Apache-2.0 许可证。
+
+[`ui-vercel`](skills/ui-vercel) 是框架无关的 Vercel 风格 UI Skill，同时包含可运行的
+TypeScript 参考实现、组件契约、页面截图和
+[在线预览](https://vercel-ui-demo.qiudeng.workers.dev)。它作为普通目录由 personal-configs
+直接管理，不依赖外部 Git 仓库。
 
 ## 同步流程
 
