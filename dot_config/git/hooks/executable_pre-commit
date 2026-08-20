@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+
+"""阻止把常见的系统、编辑器和补丁垃圾文件提交到 Git。"""
+
+from pathlib import PurePosixPath
+import subprocess
+import sys
+
+
+JUNK_FILE_NAMES = {
+    ".ds_store": "macOS Finder metadata",
+    "desktop.ini": "Windows Explorer metadata",
+    "ehthumbs.db": "Windows thumbnail cache",
+    "thumbs.db": "Windows thumbnail cache",
+}
+
+JUNK_DIRECTORY_NAMES = {
+    "$recycle.bin": "Windows recycle bin",
+    "__macosx": "macOS archive metadata",
+}
+
+JUNK_SUFFIXES = {
+    ".orig": "merge or patch backup",
+    ".rej": "rejected patch",
+    ".swn": "Vim swap file",
+    ".swo": "Vim swap file",
+    ".swp": "Vim swap file",
+}
+
+
+def staged_paths():
+    """返回本次提交新增、复制、修改、重命名或变更类型的路径。"""
+    result = subprocess.run(
+        [
+            "git",
+            "diff",
+            "--cached",
+            "--name-only",
+            "--diff-filter=ACMRT",
+            "-z",
+        ],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if result.returncode != 0:
+        error = result.stderr.decode("utf-8", errors="replace").strip()
+        print(error or "无法读取暂存区文件列表。", file=sys.stderr)
+        raise SystemExit(result.returncode)
+
+    return [
+        path.decode("utf-8", errors="surrogateescape")
+        for path in result.stdout.split(b"\0")
+        if path
+    ]
+
+
+def junk_reason(path):
+    """返回垃圾文件类型；普通文件返回 None。"""
+    parts = PurePosixPath(path).parts
+    if not parts:
+        return None
+
+    for part in parts[:-1]:
+        reason = JUNK_DIRECTORY_NAMES.get(part.casefold())
+        if reason:
+            return reason
+
+    name = parts[-1]
+    folded_name = name.casefold()
+
+    if folded_name in JUNK_FILE_NAMES:
+        return JUNK_FILE_NAMES[folded_name]
+    if name.startswith("._"):
+        return "macOS AppleDouble metadata"
+    if name.startswith(".#") or (name.startswith("#") and name.endswith("#")):
+        return "Emacs temporary file"
+    if name.endswith("~"):
+        return "editor backup file"
+
+    for suffix, reason in JUNK_SUFFIXES.items():
+        if folded_name.endswith(suffix):
+            return reason
+
+    return None
+
+
+def main():
+    violations = [
+        (path, reason)
+        for path in staged_paths()
+        if (reason := junk_reason(path)) is not None
+    ]
+    if not violations:
+        return 0
+
+    print("检测到不应提交的垃圾文件：", file=sys.stderr)
+    for path, reason in violations:
+        print(f"  {path} ({reason})", file=sys.stderr)
+    print("\n请从暂存区移除这些文件，并按需清理工作区后重新提交。", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
