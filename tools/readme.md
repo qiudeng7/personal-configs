@@ -23,9 +23,7 @@
 
 ## Runtime Baseline
 
-Tools Runtime Baseline v1 以 POSIX Shell and Utilities 为规范基础：脚本使用 POSIX `sh` 语法，基础文件、文本和归档操作只依赖 POSIX utilities 的通用行为。由于 `tools/` 需要从网络下载 release 并校验 SHA-256，Baseline 额外要求 `curl` 和一个 SHA-256 校验命令。
-
-当前只支持 macOS 和 Linux，不支持 Windows。macOS 和主流 Linux 发行版通常满足 POSIX utilities；BusyBox userland 也可以作为目标环境，但脚本不得依赖 BusyBox 专有扩展。musl 是 C 标准库，不是命令行工具集合，因此不作为 Runtime Baseline。
+Tools Runtime Baseline v1 是 `tools/` installer 可以假设存在的最小运行环境。当前只支持 macOS 和 Linux，不支持 Windows。
 
 ### 平台
 
@@ -42,13 +40,14 @@ Tools Runtime Baseline v1 以 POSIX Shell and Utilities 为规范基础：脚本
 
 每个工具必须自行确认上游是否提供对应 OS/arch 的 release asset。不能因为 Runtime Baseline 支持某个架构，就默认所有工具都支持该架构。
 
-### POSIX 命令子集
+### 必需命令
 
-`installer.sh` 和所有 `tools/<tool>/install.sh` 可以无额外声明地依赖以下 POSIX 命令：
+`installer.sh` 和所有 `tools/<tool>/install.sh` 可以无额外声明地依赖以下命令：
 
 ```text
 sh
 uname
+curl
 sed
 grep
 mktemp
@@ -60,21 +59,9 @@ chmod
 tar
 ```
 
-这些命令必须按 POSIX 语义使用。脚本不得使用 GNU-only、BSD-only 或 BusyBox-only 选项；例如不要依赖 GNU `sed -r`、GNU `grep -P`、GNU `tar --strip-components`、`readlink -f` 或 `find -maxdepth`。
-
-### 非 POSIX 外部能力
-
-网络下载要求：
-
-```text
-curl
-```
-
-`curl` 不是 POSIX utilities 的一部分，但 macOS 和大多数 Linux 开发环境默认可用。当前 Baseline 只接受 `curl`，不把 `wget` 作为等价替代，以减少分支和行为差异。
-
 ### 校验命令
 
-工具下载远端二进制时必须做完整性校验。SHA-256 命令也不是 POSIX 标准的一部分；Runtime Baseline v1 要求至少存在一个：
+工具下载远端二进制时必须做完整性校验。Runtime Baseline v1 要求至少存在一个 SHA-256 校验命令：
 
 ```text
 shasum
@@ -85,7 +72,6 @@ macOS 通常提供 `shasum -a 256`；Linux 通常提供 `sha256sum`。工具脚�
 
 ### 依赖规则
 
-- Runtime Baseline = POSIX 命令子集 + `curl` + `shasum` 或 `sha256sum`。
 - 工具脚本不得隐式依赖 `bash`、`zsh`、`jq`、`python`、`node`、`perl`、`ruby`、`git`、`gh`、`brew`、`npm`、`pip`、`uv`、`pnpm`、`systemctl` 或 `launchctl`。
 - 如果某个工具确实需要 Runtime Baseline 之外的命令，必须在该工具目录的文档中声明，并在脚本开头显式检查。
 - 统一入口 `tools/installer.sh` 只能检查 Runtime Baseline；工具特有依赖由工具自己的 `install.sh` 检查。
