@@ -77,6 +77,14 @@ checksum_for() {
         sed -n '1p'
 }
 
+verify_sha256() {
+    file=$1
+    expected=$2
+    actual=$(sha256_file "$file")
+
+    [ "$actual" = "$expected" ] || fail "checksum mismatch for ${file##*/}"
+}
+
 make_tmp_dir() {
     mktemp -d "${TMPDIR:-/tmp}/tools-$tools_name.XXXXXX"
 }
@@ -97,4 +105,18 @@ install_binary() {
     mkdir -p "${target_file%/*}"
     mv "$source_file" "$target_file"
     chmod +x "$target_file" 2>/dev/null || true
+}
+
+write_exec_wrapper() {
+    target_file=$1
+    real_file=$2
+    tmp_file="$target_file.tmp.$$"
+
+    mkdir -p "${target_file%/*}"
+    {
+        printf '%s\n' '#!/bin/sh'
+        printf 'exec "%s" "$@"\n' "$real_file"
+    } >"$tmp_file"
+    chmod +x "$tmp_file" 2>/dev/null || true
+    mv "$tmp_file" "$target_file"
 }
