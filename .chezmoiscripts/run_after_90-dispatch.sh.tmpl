@@ -6,3 +6,4 @@ source_dir={{ .chezmoi.sourceDir | quote }}
 home_dir={{ .chezmoi.homeDir | quote }}
 
 sh "$source_dir/agent/targets/codex.sh" "$source_dir/agent" "$home_dir"
+sh "$source_dir/tools/installer.sh" "$source_dir/tools" "$home_dir"

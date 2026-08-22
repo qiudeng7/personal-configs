@@ -26,3 +26,4 @@ chezmoi diff
 
 - [Git](dot_config/git/readme.md)
 - [Agent](agent/readme.md)
+- [Tools](tools/readme.md)
