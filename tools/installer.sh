@@ -29,13 +29,16 @@ need_any_cmd() {
 need_cmd sh
 need_cmd uname
 need_cmd curl
+need_cmd sed
+need_cmd grep
+need_cmd mktemp
 need_cmd chmod
 need_cmd mkdir
 need_cmd mv
-need_cmd sed
-need_cmd grep
-need_any_cmd "archive extractor" tar unzip powershell.exe
-need_any_cmd "sha256 checker" shasum sha256sum powershell.exe
+need_cmd rm
+need_cmd rmdir
+need_cmd tar
+need_any_cmd "sha256 checker" shasum sha256sum
 
 echo "tools: installing/updating managed tools"
 

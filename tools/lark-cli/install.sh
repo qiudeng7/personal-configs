@@ -23,7 +23,6 @@ detect_os() {
     case "$(uname -s)" in
         Darwin) echo "darwin" ;;
         Linux) echo "linux" ;;
-        MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
         *) fail "unsupported OS: $(uname -s)" ;;
     esac
 }
@@ -64,10 +63,6 @@ sha256_file() {
         sha256sum "$file" | sed 's/[[:space:]].*//'
         return 0
     fi
-    if command -v powershell.exe >/dev/null 2>&1; then
-        powershell.exe -NoProfile -Command "(Get-FileHash -Algorithm SHA256 '$file').Hash.ToLower()"
-        return 0
-    fi
 
     fail "no sha256 checker found"
 }
@@ -82,19 +77,6 @@ checksum_for() {
 extract_binary() {
     archive=$1
     destination=$2
-    os_name=$3
-
-    if [ "$os_name" = "windows" ]; then
-        if command -v unzip >/dev/null 2>&1; then
-            unzip -q "$archive" "$binary_name.exe" -d "$destination"
-            return 0
-        fi
-        if command -v powershell.exe >/dev/null 2>&1; then
-            powershell.exe -NoProfile -Command "Expand-Archive -LiteralPath '$archive' -DestinationPath '$destination' -Force"
-            return 0
-        fi
-        fail "no zip extractor found"
-    fi
 
     tar -xzf "$archive" -C "$destination" "$binary_name"
 }
@@ -102,9 +84,9 @@ extract_binary() {
 os_name=$(detect_os)
 arch_name=$(detect_arch)
 extension="tar.gz"
-if [ "$os_name" = "windows" ]; then
-    extension="zip"
-    target="$install_dir/$binary_name.exe"
+
+if [ "$os_name" = "darwin" ] && [ "$arch_name" = "riscv64" ]; then
+    fail "unsupported platform: darwin-riscv64"
 fi
 
 version=$(latest_version)
@@ -143,10 +125,9 @@ expected=$(checksum_for "$checksums" "$asset")
 actual=$(sha256_file "$archive")
 [ "$actual" = "$expected" ] || fail "checksum mismatch for $asset"
 
-extract_binary "$archive" "$extract_dir" "$os_name"
+extract_binary "$archive" "$extract_dir"
 
 installed_binary="$extract_dir/$binary_name"
-[ "$os_name" = "windows" ] && installed_binary="$extract_dir/$binary_name.exe"
 [ -f "$installed_binary" ] || fail "extracted binary not found"
 
 chmod +x "$installed_binary" 2>/dev/null || true
