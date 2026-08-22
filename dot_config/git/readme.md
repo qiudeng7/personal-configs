@@ -1,6 +1,6 @@
 # Git
 
-为所有 Git 仓库启用用户级 Hooks，统一提交信息格式并阻止常见垃圾文件进入仓库。
+为所有 Git 仓库启用用户级 Hooks，统一提交信息格式、阻止常见垃圾文件进入仓库，并控制提交规模。
 
 ## 提交信息格式
 
@@ -30,10 +30,20 @@ build-tools(api/auth-service): 更新登录服务构建流程
 
 构建产物、IDE 配置和依赖目录不属于全局规则，由各项目自行决定是否提交。
 
+## 提交规模检查
+
+`pre-commit` 会额外检查暂存区中的提交规模：
+
+- 暂存区版本中，任意被提交文件不得超过 500 行
+- 单次提交的新增行数与删除行数之和不得超过 1200 行
+- 二进制文件不计入新增/删除行数，但仍会按暂存内容换行数检查文件长度
+
+1200 行是偏保守的默认值，适合日常代码、配置和文档变更。如果经常提交生成文件、锁文件或批量迁移，可以按仓库情况提高到 2000-3000 行；如果希望强制小步提交，可以降低到 600-800 行。
+
 ## 文件
 
 - [`config`](config)：配置用户级 `core.hooksPath`
 - [`hooks/executable_commit-msg`](hooks/executable_commit-msg)：校验提交信息首行
-- [`hooks/executable_pre-commit`](hooks/executable_pre-commit)：阻止暂存区中的常见垃圾文件
+- [`hooks/executable_pre-commit`](hooks/executable_pre-commit)：阻止暂存区中的常见垃圾文件、过长文件和过大提交
 
 Hooks 使用 Python 3 运行。本地校验可以被 `git commit --no-verify` 或仓库级 `core.hooksPath` 覆盖绕过。
