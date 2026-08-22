@@ -91,7 +91,7 @@ tools/
 
 每个 `tools/<tool>/install.sh` 必须满足：
 
-- 可由 POSIX `sh` 执行
+- 可由 `/bin/sh` 执行，且只假设本文定义的 Runtime Baseline 存在
 - 接收两个参数：`tools_dir` 和 `home_dir`
 - 不依赖当前工作目录
 - 输出简洁状态信息
