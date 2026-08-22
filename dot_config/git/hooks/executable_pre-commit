@@ -8,7 +8,7 @@ import sys
 
 
 MAX_CHANGED_FILE_LINES = 500
-MAX_COMMIT_CHANGED_LINES = 1200
+MAX_COMMIT_CHANGED_LINES = 3000
 
 JUNK_FILE_NAMES = {
     ".ds_store": "macOS Finder metadata",
