@@ -5,42 +5,13 @@ set -eu
 _tools_dir=${1:?tools source directory is required}
 home_dir=${2:?home directory is required}
 
+tools_name="lark-cli"
+. "$_tools_dir/functions.sh"
+
 repo="larksuite/cli"
 binary_name="lark-cli"
 install_dir=${LARK_CLI_INSTALL_DIR:-"$home_dir/.local/bin"}
 target="$install_dir/$binary_name"
-
-log() {
-    echo "lark-cli: $*"
-}
-
-fail() {
-    echo "lark-cli: $*" >&2
-    exit 1
-}
-
-detect_os() {
-    case "$(uname -s)" in
-        Darwin) echo "darwin" ;;
-        Linux) echo "linux" ;;
-        *) fail "unsupported OS: $(uname -s)" ;;
-    esac
-}
-
-detect_arch() {
-    case "$(uname -m)" in
-        arm64|aarch64) echo "arm64" ;;
-        x86_64|amd64) echo "amd64" ;;
-        riscv64) echo "riscv64" ;;
-        *) fail "unsupported architecture: $(uname -m)" ;;
-    esac
-}
-
-latest_version() {
-    curl -fsSL "https://api.github.com/repos/$repo/releases/latest" |
-        sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' |
-        sed -n '1p'
-}
 
 installed_version() {
     if [ ! -x "$target" ]; then
@@ -50,28 +21,6 @@ installed_version() {
     "$target" --version 2>/dev/null |
         sed -n 's/^lark-cli version //p' |
         sed -n '1p'
-}
-
-sha256_file() {
-    file=$1
-
-    if command -v shasum >/dev/null 2>&1; then
-        shasum -a 256 "$file" | sed 's/[[:space:]].*//'
-        return 0
-    fi
-    if command -v sha256sum >/dev/null 2>&1; then
-        sha256sum "$file" | sed 's/[[:space:]].*//'
-        return 0
-    fi
-
-    fail "no sha256 checker found"
-}
-
-checksum_for() {
-    checksums=$1
-    asset=$2
-
-    grep "  $asset\$" "$checksums" | sed 's/[[:space:]].*//' | sed -n '1p'
 }
 
 extract_binary() {
@@ -89,7 +38,7 @@ if [ "$os_name" = "darwin" ] && [ "$arch_name" = "riscv64" ]; then
     fail "unsupported platform: darwin-riscv64"
 fi
 
-version=$(latest_version)
+version=$(github_latest_version "$repo")
 [ -n "$version" ] || fail "failed to resolve latest GitHub release"
 
 current=$(installed_version)
@@ -100,18 +49,13 @@ fi
 
 asset="$binary_name-$version-$os_name-$arch_name.$extension"
 base_url="https://github.com/$repo/releases/download/v$version"
-tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/lark-cli.XXXXXX")
+tmp_dir=$(make_tmp_dir)
 archive="$tmp_dir/$asset"
 checksums="$tmp_dir/checksums.txt"
 extract_dir="$tmp_dir/extract"
 
 cleanup() {
-    if [ -n "${tmp_dir:-}" ] && [ -d "$tmp_dir" ]; then
-        [ -f "$archive" ] && rm "$archive" 2>/dev/null || true
-        [ -f "$checksums" ] && rm "$checksums" 2>/dev/null || true
-        rmdir "$extract_dir" 2>/dev/null || true
-        rmdir "$tmp_dir" 2>/dev/null || true
-    fi
+    cleanup_tmp_dir "$tmp_dir"
 }
 trap cleanup EXIT HUP INT TERM
 
@@ -133,8 +77,6 @@ installed_binary="$extract_dir/$binary_name"
 chmod +x "$installed_binary" 2>/dev/null || true
 "$installed_binary" --version >/dev/null 2>&1 || fail "downloaded binary failed version check"
 
-mkdir -p "$install_dir"
-mv "$installed_binary" "$target"
-chmod +x "$target" 2>/dev/null || true
+install_binary "$installed_binary" "$target"
 
 log "installed $version to $target"

@@ -1,3 +1,10 @@
 # Tools
 
-`tools/` 是 chezmoi 同步意义上的常用工具套件安装器，只负责用户级二进制本身的安装和更新，不负责 shell 配置、PATH、systemd/launchd、登录态、插件、缓存或项目配置；统一入口是 `tools/installer.sh`，由 `.chezmoiscripts` 在 `chezmoi apply` 或 `chezmoi update` 后触发，并按目录顺序加载每个 `tools/<tool>/install.sh`。这套脚本暂时只考虑 macOS 和 Linux，不考虑 Windows；工具脚本需要识别 OS 和 CPU 架构，但 Runtime Baseline 支持某个平台不代表每个上游工具都有对应 release。当前自定义的 Runtime Baseline v1 只包含 `sh`、`uname`、`curl`、`sed`、`grep`、`mktemp`、`mkdir`、`mv`、`rm`、`rmdir`、`chmod`、`tar`，以及 `shasum` 或 `sha256sum` 之一；如果某个工具需要更多命令，必须在自己的目录里声明并显式检查。每个工具目录目前只约定一个 `install.sh`，接收 `tools_dir` 和 `home_dir` 两个参数，要求幂等、输出简洁、失败时非零退出，默认把二进制安装到用户目录下的 `~/.local/bin`。具体实例目前只有 `lark-cli`：从 `larksuite/cli` GitHub release 下载最新官方二进制，不使用 npm，不安装官方 skills。
+一套同步常用工具的脚本，只依赖少量 runtime baseline
+
+每个工具对应的脚本:
+1. 只考虑 macOS 和 Linux，不考虑 Windows；
+2. 只依赖 `sh`、`uname`、`curl`、`sed`、`grep`、`mktemp`、`mkdir`、`mv`、`rm`、`rmdir`、`chmod`、`tar`、`unzip`
+3. 只负责获取最新版的二进制文件并放到 `~/.local/bin` 下
+4. 可复用函数放在 `./functions.sh`
+5. 在chezmoi apply时被 `./main.sh` 直接调用
