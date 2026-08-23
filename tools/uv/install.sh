@@ -73,27 +73,22 @@ fi
 
 install_uv_tool() {
     package=$1
-    tool_bin_dir="$home_dir/.local/bin"
-    tool_dir="$home_dir/.local/share/tools/uv"
-    command_path="$tool_bin_dir/$package"
 
     before=""
-    if [ -x "$command_path" ]; then
-        before=$("$command_path" --version 2>/dev/null | sed -n '1p' || true)
+    if command -v "$package" >/dev/null 2>&1; then
+        before=$("$package" --version 2>/dev/null | sed -n '1p' || true)
     fi
 
-    UV_TOOL_BIN_DIR="$tool_bin_dir" \
-    UV_TOOL_DIR="$tool_dir" \
-        "$target" tool install --upgrade "$package"
+    "$target" tool install --upgrade "$package"
 
-    [ -x "$command_path" ] || fail "$package installation did not produce an executable"
-    after=$("$command_path" --version 2>/dev/null | sed -n '1p' || true)
+    command -v "$package" >/dev/null 2>&1 || fail "$package installation did not produce an executable"
+    after=$("$package" --version 2>/dev/null | sed -n '1p' || true)
     [ -n "$after" ] || fail "$package installation did not produce a working executable"
 
     if [ "$before" = "$after" ]; then
         log "$package already latest ($after)"
     else
-        log "$package installed $after to $command_path"
+        log "$package installed $after"
     fi
 }
 
