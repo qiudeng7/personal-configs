@@ -38,35 +38,64 @@ version=$(github_latest_version "$repo")
 current=$(installed_version)
 if [ "$current" = "$version" ]; then
     log "already latest ($version)"
-    exit 0
+else
+
+    asset="uv-$target_triple.tar.gz"
+    checksum_asset="$asset.sha256"
+    base_url="https://github.com/$repo/releases/download/$version"
+    tmp_dir=$(make_tmp_dir)
+    archive="$tmp_dir/$asset"
+    checksum="$tmp_dir/$checksum_asset"
+    extract_dir="$tmp_dir/extract"
+
+    cleanup() {
+        cleanup_tmp_dir "$tmp_dir"
+    }
+    trap cleanup EXIT HUP INT TERM
+
+    mkdir -p "$extract_dir"
+    curl -fsSL "$base_url/$asset" -o "$archive"
+    curl -fsSL "$base_url/$checksum_asset" -o "$checksum"
+
+    expected=$(sed 's/[[:space:]].*//' "$checksum" | sed -n '1p')
+    [ -n "$expected" ] || fail "checksum not found for $asset"
+    verify_sha256 "$archive" "$expected"
+
+    tar -xzf "$archive" -C "$extract_dir"
+    installed_binary="$extract_dir/uv-$target_triple/$binary_name"
+    [ -f "$installed_binary" ] || fail "extracted binary not found"
+    chmod +x "$installed_binary" 2>/dev/null || true
+    "$installed_binary" --version >/dev/null 2>&1 || fail "downloaded binary failed version check"
+
+    install_binary "$installed_binary" "$target"
+    log "installed $version to $target"
 fi
 
-asset="uv-$target_triple.tar.gz"
-checksum_asset="$asset.sha256"
-base_url="https://github.com/$repo/releases/download/$version"
-tmp_dir=$(make_tmp_dir)
-archive="$tmp_dir/$asset"
-checksum="$tmp_dir/$checksum_asset"
-extract_dir="$tmp_dir/extract"
+install_uv_tool() {
+    package=$1
+    command_name=$2
+    tool_bin_dir="$home_dir/.local/bin"
+    tool_dir="$home_dir/.local/share/tools/uv"
+    command_path="$tool_bin_dir/$command_name"
 
-cleanup() {
-    cleanup_tmp_dir "$tmp_dir"
+    before=""
+    if [ -x "$command_path" ]; then
+        before=$("$command_path" --version 2>/dev/null | sed -n '1p' || true)
+    fi
+
+    UV_TOOL_BIN_DIR="$tool_bin_dir" \
+    UV_TOOL_DIR="$tool_dir" \
+        "$target" tool install --upgrade "$package"
+
+    [ -x "$command_path" ] || fail "$command_name installation did not produce an executable"
+    after=$("$command_path" --version 2>/dev/null | sed -n '1p' || true)
+    [ -n "$after" ] || fail "$command_name installation did not produce a working executable"
+
+    if [ "$before" = "$after" ]; then
+        log "$command_name already latest ($after)"
+    else
+        log "$command_name installed $after to $command_path"
+    fi
 }
-trap cleanup EXIT HUP INT TERM
 
-mkdir -p "$extract_dir"
-curl -fsSL "$base_url/$asset" -o "$archive"
-curl -fsSL "$base_url/$checksum_asset" -o "$checksum"
-
-expected=$(sed 's/[[:space:]].*//' "$checksum" | sed -n '1p')
-[ -n "$expected" ] || fail "checksum not found for $asset"
-verify_sha256 "$archive" "$expected"
-
-tar -xzf "$archive" -C "$extract_dir"
-installed_binary="$extract_dir/uv-$target_triple/$binary_name"
-[ -f "$installed_binary" ] || fail "extracted binary not found"
-chmod +x "$installed_binary" 2>/dev/null || true
-"$installed_binary" --version >/dev/null 2>&1 || fail "downloaded binary failed version check"
-
-install_binary "$installed_binary" "$target"
-log "installed $version to $target"
+install_uv_tool tccli tccli
