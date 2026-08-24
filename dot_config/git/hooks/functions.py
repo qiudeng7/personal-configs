@@ -2,7 +2,7 @@
 
 import subprocess
 import sys
-from typing import List
+from typing import List, Tuple
 
 
 def run_git(args: List[str]) -> bytes:
@@ -40,7 +40,7 @@ def staged_paths() -> List[str]:
 
 
 def staged_file_line_count(path: str) -> int:
-    """返回暂存区中文件内容的行数；二进制内容按字节换行粗略统计。"""
+    """返回暂存区中文本文件内容的行数。"""
     content = run_git(["show", f":{path}"])
     if not content:
         return 0
@@ -51,17 +51,48 @@ def staged_file_line_count(path: str) -> int:
     return line_count
 
 
-def staged_change_line_count() -> int:
-    """返回本次提交的新增行与删除行总数；二进制文件不计入。"""
+def staged_file_size(path: str) -> int:
+    """返回暂存区中文件内容的字节数。"""
+    return len(run_git(["show", f":{path}"]))
+
+
+def staged_numstat() -> List[Tuple[str, str, str]]:
+    """返回暂存区 numstat 字段：(新增行, 删除行, 路径)。"""
     output = run_git(["diff", "--cached", "--numstat", "--diff-filter=ACMRT", "-z"])
     if not output:
-        return 0
+        return []
 
     fields = [field for field in output.split(b"\0") if field]
-    total = 0
+    rows = []
     for field in fields:
         columns = field.split(b"\t")
-        if len(columns) < 3 or columns[0] == b"-" or columns[1] == b"-":
+        if len(columns) < 3:
             continue
-        total += int(columns[0]) + int(columns[1])
+        rows.append(
+            (
+                columns[0].decode("utf-8", errors="replace"),
+                columns[1].decode("utf-8", errors="replace"),
+                columns[2].decode("utf-8", errors="surrogateescape"),
+            )
+        )
+    return rows
+
+
+def staged_text_paths() -> List[str]:
+    """返回暂存区中的文本文件路径。"""
+    return [path for added, deleted, path in staged_numstat() if added != "-" and deleted != "-"]
+
+
+def staged_binary_paths() -> List[str]:
+    """返回暂存区中的二进制文件路径。"""
+    return [path for added, deleted, path in staged_numstat() if added == "-" and deleted == "-"]
+
+
+def staged_change_line_count() -> int:
+    """返回本次提交的新增行与删除行总数；二进制文件不计入。"""
+    total = 0
+    for added, deleted, _path in staged_numstat():
+        if added == "-" or deleted == "-":
+            continue
+        total += int(added) + int(deleted)
     return total
