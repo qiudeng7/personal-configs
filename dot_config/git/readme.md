@@ -43,7 +43,11 @@ build-tools(api/auth-service): 更新登录服务构建流程
 ## 文件
 
 - [`config`](config)：配置用户级 `core.hooksPath`
-- [`hooks/executable_commit-msg`](hooks/executable_commit-msg)：校验提交信息首行
-- [`hooks/executable_pre-commit`](hooks/executable_pre-commit)：阻止暂存区中的常见垃圾文件、过长文件和过大提交
+- [`hooks/executable_commit-msg`](hooks/executable_commit-msg)：Git `commit-msg` 入口，调用提交信息格式规则
+- [`hooks/executable_pre-commit`](hooks/executable_pre-commit)：Git `pre-commit` 入口，调用垃圾文件和提交规模规则
+- [`hooks/commit_message_validator/main.py`](hooks/commit_message_validator/main.py)：提交信息格式规则，可单独执行
+- [`hooks/no_junk_files/main.py`](hooks/no_junk_files/main.py)：垃圾文件检查规则，可单独执行
+- [`hooks/commit_size_limitation/main.py`](hooks/commit_size_limitation/main.py)：提交规模检查规则，可单独执行
+- [`hooks/functions.py`](hooks/functions.py)：暂存区读取公共辅助函数
 
 Hooks 使用 Python 3 运行。本地校验可以被 `git commit --no-verify` 或仓库级 `core.hooksPath` 覆盖绕过。

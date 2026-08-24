@@ -1,179 +1,24 @@
 #!/usr/bin/env python3
 
-"""阻止把常见垃圾文件、过长文件和过大变更提交到 Git。"""
+"""Git pre-commit 入口：校验暂存区。"""
 
-from pathlib import PurePosixPath
-import subprocess
+from pathlib import Path
 import sys
 
 
-MAX_CHANGED_FILE_LINES = 500
-MAX_COMMIT_CHANGED_LINES = 3000
+HOOKS_DIR = Path(__file__).resolve().parent
+if str(HOOKS_DIR) not in sys.path:
+    sys.path.insert(0, str(HOOKS_DIR))
 
-JUNK_FILE_NAMES = {
-    ".ds_store": "macOS Finder metadata",
-    "desktop.ini": "Windows Explorer metadata",
-    "ehthumbs.db": "Windows thumbnail cache",
-    "thumbs.db": "Windows thumbnail cache",
-}
-
-JUNK_DIRECTORY_NAMES = {
-    "$recycle.bin": "Windows recycle bin",
-    "__macosx": "macOS archive metadata",
-}
-
-JUNK_SUFFIXES = {
-    ".orig": "merge or patch backup",
-    ".rej": "rejected patch",
-    ".swn": "Vim swap file",
-    ".swo": "Vim swap file",
-    ".swp": "Vim swap file",
-}
+from commit_size_limitation.main import main as check_commit_size
+from no_junk_files.main import main as check_junk_files
 
 
-def staged_paths():
-    """返回本次提交新增、复制、修改、重命名或变更类型的路径。"""
-    result = subprocess.run(
-        [
-            "git",
-            "diff",
-            "--cached",
-            "--name-only",
-            "--diff-filter=ACMRT",
-            "-z",
-        ],
-        check=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    if result.returncode != 0:
-        error = result.stderr.decode("utf-8", errors="replace").strip()
-        print(error or "无法读取暂存区文件列表。", file=sys.stderr)
-        raise SystemExit(result.returncode)
-
-    return [
-        path.decode("utf-8", errors="surrogateescape")
-        for path in result.stdout.split(b"\0")
-        if path
-    ]
-
-
-def run_git(args):
-    """执行 Git 命令并返回 stdout bytes。"""
-    result = subprocess.run(
-        ["git", *args],
-        check=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    if result.returncode != 0:
-        error = result.stderr.decode("utf-8", errors="replace").strip()
-        print(error or f"Git 命令执行失败：git {' '.join(args)}", file=sys.stderr)
-        raise SystemExit(result.returncode)
-
-    return result.stdout
-
-
-def junk_reason(path):
-    """返回垃圾文件类型；普通文件返回 None。"""
-    parts = PurePosixPath(path).parts
-    if not parts:
-        return None
-
-    for part in parts[:-1]:
-        reason = JUNK_DIRECTORY_NAMES.get(part.casefold())
-        if reason:
-            return reason
-
-    name = parts[-1]
-    folded_name = name.casefold()
-
-    if folded_name in JUNK_FILE_NAMES:
-        return JUNK_FILE_NAMES[folded_name]
-    if name.startswith("._"):
-        return "macOS AppleDouble metadata"
-    if name.startswith(".#") or (name.startswith("#") and name.endswith("#")):
-        return "Emacs temporary file"
-    if name.endswith("~"):
-        return "editor backup file"
-
-    for suffix, reason in JUNK_SUFFIXES.items():
-        if folded_name.endswith(suffix):
-            return reason
-
-    return None
-
-
-def staged_file_line_count(path):
-    """返回暂存区中文件内容的行数；二进制内容按字节换行粗略统计。"""
-    content = run_git(["show", f":{path}"])
-    if not content:
-        return 0
-
-    line_count = content.count(b"\n")
-    if not content.endswith(b"\n"):
-        line_count += 1
-    return line_count
-
-
-def oversized_staged_files(paths):
-    """返回暂存区版本超过单文件长度限制的文件。"""
-    violations = []
-    for path in paths:
-        line_count = staged_file_line_count(path)
-        if line_count > MAX_CHANGED_FILE_LINES:
-            violations.append((path, line_count))
-    return violations
-
-
-def staged_change_line_count():
-    """返回本次提交的新增行与删除行总数；二进制文件不计入。"""
-    output = run_git(["diff", "--cached", "--numstat", "--diff-filter=ACMRT", "-z"])
-    if not output:
-        return 0
-
-    fields = [field for field in output.split(b"\0") if field]
-    total = 0
-    for field in fields:
-        columns = field.split(b"\t")
-        if len(columns) < 3 or columns[0] == b"-" or columns[1] == b"-":
-            continue
-        total += int(columns[0]) + int(columns[1])
-    return total
-
-
-def main():
-    paths = staged_paths()
-    violations = [
-        (path, reason)
-        for path in paths
-        if (reason := junk_reason(path)) is not None
-    ]
-    if violations:
-        print("检测到不应提交的垃圾文件：", file=sys.stderr)
-        for path, reason in violations:
-            print(f"  {path} ({reason})", file=sys.stderr)
-        print("\n请从暂存区移除这些文件，并按需清理工作区后重新提交。", file=sys.stderr)
-        return 1
-
-    oversized_files = oversized_staged_files(paths)
-    if oversized_files:
-        print(f"检测到超过 {MAX_CHANGED_FILE_LINES} 行的暂存文件：", file=sys.stderr)
-        for path, line_count in oversized_files:
-            print(f"  {path} ({line_count} 行)", file=sys.stderr)
-        print("\n请拆分文件、减少单文件职责，或在确有必要时使用 git commit --no-verify。", file=sys.stderr)
-        return 1
-
-    change_line_count = staged_change_line_count()
-    if change_line_count > MAX_COMMIT_CHANGED_LINES:
-        print(
-            f"本次提交变更过大：新增+删除共 {change_line_count} 行，"
-            f"限制为 {MAX_COMMIT_CHANGED_LINES} 行。",
-            file=sys.stderr,
-        )
-        print("\n请拆成更小的提交，或在确有必要时使用 git commit --no-verify。", file=sys.stderr)
-        return 1
-
+def main() -> int:
+    for check in (check_junk_files, check_commit_size):
+        result = check([])
+        if result != 0:
+            return result
     return 0
 
 
