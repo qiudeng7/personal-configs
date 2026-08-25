@@ -7,12 +7,12 @@ system_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 home_dir=${HOME:?home directory is required}
 
 . "$tools_dir/functions.sh"
-. "$system_dir/aliyun-cli/main.sh"
-. "$system_dir/fnm/main.sh"
-. "$system_dir/infisical/main.sh"
-. "$system_dir/lark-cli/main.sh"
-. "$system_dir/pnpm/main.sh"
-. "$system_dir/uv/main.sh"
+. "$system_dir/get-binaries/aliyun-cli.sh"
+. "$system_dir/get-binaries/fnm.sh"
+. "$system_dir/get-binaries/infisical.sh"
+. "$system_dir/get-binaries/lark-cli.sh"
+. "$system_dir/get-binaries/pnpm.sh"
+. "$system_dir/get-binaries/uv.sh"
 
 tools_name="tools/macos"
 

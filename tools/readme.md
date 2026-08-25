@@ -16,11 +16,12 @@ sh tools/main.sh
 
 ## 安装层次
 
-每个系统目录都有自己的 `install.sh`。入口脚本先通过系统包管理器安装基础工具，
+每个系统目录都有自己的 `install.sh`。入口脚本直接通过系统包管理器安装基础工具，
 再 source 根目录的 `tools/functions.sh` 和本系统需要的
-`tools/{system}/{tool}/main.sh`，最后显式调用对应的 `install_*` 函数。
+`tools/{system}/get-binaries/*.sh`，最后显式调用对应的 `install_*` 函数。
 
-每个 `tools/{system}/{tool}/main.sh` 只提供一个安装函数，不在文件加载时执行安装。
+每个 `tools/{system}/get-binaries/{tool}.sh` 只提供一个安装函数，不在文件加载时
+执行安装。
 `tools/functions.sh` 只保留通用 helper，例如下载校验、临时目录清理、架构归一化和
 用户级 bin 目录准备；它不负责判断当前系统，也不决定安装哪些工具。
 
@@ -30,8 +31,8 @@ sh tools/main.sh
 - `fnm`
 - `infisical`
 - `lark-cli`
-- `pnpm`，并继续按 `pnpm/list.txt` 安装 `wrangler`
-- `uv`，并继续按 `uv/list.txt` 安装 `tccli`
+- `pnpm`，并继续安装 `wrangler`
+- `uv`，并继续安装 `tccli`
 
 Ubuntu 还通过系统内的工具函数安装 `helm`、`kubectl` 和 Mike Farah 版本的 `yq`。
 这些用户级安装函数保留版本检测、下载校验和可执行文件校验逻辑，默认安装到用户

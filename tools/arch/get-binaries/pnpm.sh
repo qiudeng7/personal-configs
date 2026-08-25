@@ -1,5 +1,5 @@
-# Ubuntu installer for pnpm and pnpm-managed global tools.
-# Depends on tools/functions.sh, home_dir, and system_dir from tools/ubuntu/install.sh.
+# Arch Linux installer for pnpm and pnpm-managed global tools.
+# Depends on tools/functions.sh and home_dir from tools/arch/install.sh.
 
 install_pnpm() (
     set -eu
@@ -10,15 +10,7 @@ install_pnpm() (
     install_dir=${PNPM_INSTALL_DIR:-"$home_dir/.local/bin"}
     store_dir=${PNPM_STORE_DIR:-"$home_dir/.local/share/tools/pnpm"}
     target="$install_dir/$binary_name"
-    arch_name=$(detect_arch)
-
-    case "$arch_name" in
-        amd64) asset_arch="x64" ;;
-        arm64) asset_arch="arm64" ;;
-        *) fail "unsupported architecture: $arch_name" ;;
-    esac
-
-    asset="pnpm-linux-$asset_arch.tar.gz"
+    asset="pnpm-linux-x64.tar.gz"
 
     installed_version() {
         [ -x "$target" ] || return 0
@@ -82,13 +74,7 @@ install_pnpm() (
         log "installed $version to $target"
     fi
 
-    list_file="$system_dir/pnpm/list.txt"
-    [ -f "$list_file" ] || exit 0
-
-    while IFS= read -r package || [ -n "$package" ]; do
-        case "$package" in
-            ""|\#*) continue ;;
-        esac
+    for package in wrangler; do
         install_pnpm_package "$package"
-    done <"$list_file"
+    done
 )

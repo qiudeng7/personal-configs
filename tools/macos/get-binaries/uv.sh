@@ -1,5 +1,5 @@
 # macOS installer for uv and uv-managed tools.
-# Depends on tools/functions.sh, home_dir, and system_dir from tools/macos/install.sh.
+# Depends on tools/functions.sh and home_dir from tools/macos/install.sh.
 
 install_uv() (
     set -eu
@@ -83,13 +83,7 @@ install_uv() (
         log "installed $version to $target"
     fi
 
-    list_file="$system_dir/uv/list.txt"
-    [ -f "$list_file" ] || exit 0
-
-    while IFS= read -r package || [ -n "$package" ]; do
-        case "$package" in
-            ""|\#*) continue ;;
-        esac
+    for package in tccli; do
         install_uv_tool "$package"
-    done <"$list_file"
+    done
 )

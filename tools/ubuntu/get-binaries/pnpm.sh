@@ -1,5 +1,5 @@
-# macOS installer for pnpm and pnpm-managed global tools.
-# Depends on tools/functions.sh, home_dir, and system_dir from tools/macos/install.sh.
+# Ubuntu installer for pnpm and pnpm-managed global tools.
+# Depends on tools/functions.sh and home_dir from tools/ubuntu/install.sh.
 
 install_pnpm() (
     set -eu
@@ -18,7 +18,7 @@ install_pnpm() (
         *) fail "unsupported architecture: $arch_name" ;;
     esac
 
-    asset="pnpm-darwin-$asset_arch.tar.gz"
+    asset="pnpm-linux-$asset_arch.tar.gz"
 
     installed_version() {
         [ -x "$target" ] || return 0
@@ -82,13 +82,7 @@ install_pnpm() (
         log "installed $version to $target"
     fi
 
-    list_file="$system_dir/pnpm/list.txt"
-    [ -f "$list_file" ] || exit 0
-
-    while IFS= read -r package || [ -n "$package" ]; do
-        case "$package" in
-            ""|\#*) continue ;;
-        esac
+    for package in wrangler; do
         install_pnpm_package "$package"
-    done <"$list_file"
+    done
 )
