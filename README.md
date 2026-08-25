@@ -22,6 +22,16 @@ chezmoi update
 chezmoi diff
 ```
 
+## 手动安装工具集
+
+工具安装可能调用系统包管理器并请求 `sudo` 权限，因此不会随
+`chezmoi apply` 或 `chezmoi update` 自动执行。需要安装或更新当前系统的
+工具集时，在仓库根目录显式运行：
+
+```bash
+sh tools/main.sh
+```
+
 ## Domain 文档
 
 - [Git](dot_config/git/readme.md)

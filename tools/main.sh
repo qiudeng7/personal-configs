@@ -2,36 +2,39 @@
 
 set -eu
 
-tools_dir=${1:?tools source directory is required}
-home_dir=${2:?home directory is required}
+tools_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
-. "$tools_dir/functions.sh"
+case "$(uname -s)" in
+    Darwin)
+        system_name=macos
+        ;;
+    Linux)
+        if [ ! -r /etc/os-release ]; then
+            echo "tools: cannot detect Linux distribution" >&2
+            exit 1
+        fi
 
-need_cmd sh
-need_cmd uname
-need_cmd curl
-need_cmd sed
-need_cmd grep
-need_cmd mktemp
-need_cmd chmod
-need_cmd mkdir
-need_cmd mv
-need_cmd rm
-need_cmd rmdir
-need_cmd tar
-need_cmd unzip
-need_any_cmd "sha256 checker" shasum sha256sum
+        . /etc/os-release
+        case "$ID" in
+            arch) system_name=arch ;;
+            ubuntu) system_name=ubuntu ;;
+            *)
+                echo "tools: unsupported Linux distribution: $ID" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    *)
+        echo "tools: unsupported system: $(uname -s)" >&2
+        exit 1
+        ;;
+esac
 
-echo "tools: installing/updating managed tools"
+installer="$tools_dir/$system_name/install.sh"
+if [ ! -f "$installer" ]; then
+    echo "tools: installer not found: $installer" >&2
+    exit 1
+fi
 
-for tool_dir in "$tools_dir"/*; do
-    [ -d "$tool_dir" ] || continue
-    [ -f "$tool_dir/install.sh" ] || continue
-
-    tool_name=${tool_dir##*/}
-    [ "$tool_name" = "functions.sh" ] && continue
-    echo "tools: $tool_name"
-    sh "$tool_dir/install.sh" "$tools_dir" "$home_dir"
-done
-
-echo "tools: done"
+echo "tools: installing $system_name toolset"
+sh "$installer" "$tools_dir"
