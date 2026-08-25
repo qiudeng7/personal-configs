@@ -28,14 +28,6 @@ need_any_cmd() {
     fail "missing required command group: $label ($*)"
 }
 
-detect_os() {
-    case "$(uname -s)" in
-        Darwin) echo "darwin" ;;
-        Linux) echo "linux" ;;
-        *) fail "unsupported OS: $(uname -s)" ;;
-    esac
-}
-
 detect_arch() {
     case "$(uname -m)" in
         arm64|aarch64) echo "arm64" ;;
@@ -43,6 +35,37 @@ detect_arch() {
         riscv64) echo "riscv64" ;;
         *) fail "unsupported architecture: $(uname -m)" ;;
     esac
+}
+
+prepare_binary_installation() {
+    home_dir=${1:?home directory is required}
+
+    need_cmd sh
+    need_cmd uname
+    need_cmd curl
+    need_cmd sed
+    need_cmd grep
+    need_cmd mktemp
+    need_cmd chmod
+    need_cmd mkdir
+    need_cmd mv
+    need_cmd rm
+    need_cmd rmdir
+    need_cmd tar
+    need_cmd unzip
+    need_any_cmd "sha256 checker" shasum sha256sum
+
+    user_bin_dir="$home_dir/.local/bin"
+    mkdir -p "$user_bin_dir"
+
+    case ${PATH-} in
+        "$user_bin_dir"|"$user_bin_dir":*) ;;
+        *) PATH="$user_bin_dir${PATH:+:$PATH}" ;;
+    esac
+
+    : "${PNPM_HOME:=$user_bin_dir}"
+    : "${UV_TOOL_BIN_DIR:=$user_bin_dir}"
+    export PATH PNPM_HOME UV_TOOL_BIN_DIR
 }
 
 github_latest_version() {

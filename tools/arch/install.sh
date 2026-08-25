@@ -3,8 +3,18 @@
 set -eu
 
 tools_dir=${1:?tools source directory is required}
-common_dir="$tools_dir/common"
+system_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 home_dir=${HOME:?home directory is required}
+
+. "$tools_dir/functions.sh"
+. "$system_dir/aliyun-cli/main.sh"
+. "$system_dir/fnm/main.sh"
+. "$system_dir/infisical/main.sh"
+. "$system_dir/lark-cli/main.sh"
+. "$system_dir/pnpm/main.sh"
+. "$system_dir/uv/main.sh"
+
+tools_name="tools/arch"
 
 if [ "$(id -u)" -eq 0 ]; then
     echo "tools: run this script as a regular user; it invokes sudo when needed" >&2
@@ -44,10 +54,17 @@ sudo systemctl enable --now docker.service containerd.service
 
 echo "tools: $docker_user was added to the docker group; log out and back in to apply it"
 
-sh "$common_dir/main.sh" "$common_dir" "$home_dir" \
-    aliyun-cli \
-    fnm \
-    infisical \
-    lark-cli \
-    pnpm \
-    uv
+prepare_binary_installation "$home_dir"
+
+log "aliyun-cli"
+install_aliyun_cli
+log "fnm"
+install_fnm
+log "infisical"
+install_infisical
+log "lark-cli"
+install_lark_cli
+log "pnpm"
+install_pnpm
+log "uv"
+install_uv
