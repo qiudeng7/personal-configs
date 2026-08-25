@@ -1,0 +1,6 @@
+# Copy to ~/.config/zsh/local.private.zsh on a machine when local overrides are
+# needed. Do not commit real secrets.
+#
+# Example:
+# export ANTHROPIC_AUTH_TOKEN=...
+# export ANTHROPIC_BASE_URL=...

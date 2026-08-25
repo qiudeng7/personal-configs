@@ -1,0 +1,3 @@
+# Loaded by every zsh process, including non-interactive commands.
+# Keep this file fast, silent, and free of commands that may fail or prompt.
+# Machine-specific values and secrets must not be added here.

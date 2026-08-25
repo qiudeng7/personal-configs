@@ -1,0 +1,6 @@
+# Loaded by interactive shells after ~/.zshenv and, for login shells, ~/.zprofile.
+# The sourced file may change prompt, completion, key bindings, aliases, and
+# interactive tool behavior. It must not print output during normal startup.
+
+[[ -r "$HOME/.config/zsh/interactive.zsh" ]] &&
+  source "$HOME/.config/zsh/interactive.zsh"

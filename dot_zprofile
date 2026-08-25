@@ -1,0 +1,6 @@
+# Loaded by login shells after ~/.zshenv.
+# This initializes the session environment. The sourced file guards optional
+# tools and must stay quiet during normal startup.
+
+[[ -r "$HOME/.config/zsh/env.zsh" ]] &&
+  source "$HOME/.config/zsh/env.zsh"
