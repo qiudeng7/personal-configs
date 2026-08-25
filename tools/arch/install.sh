@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Main stage for the Arch Linux toolset.
+# Order: install pacman packages, configure Docker, then run Arch-local binary
+# installers. No prepare stage is needed because every system package here uses
+# the regular pacman repositories already configured on the machine.
+
 set -eu
 
 tools_dir=${1:?tools source directory is required}
@@ -46,13 +51,7 @@ sudo pacman -Syu --needed \
     unzip \
     vim
 
-if ! getent group docker >/dev/null 2>&1; then
-    sudo groupadd docker
-fi
-sudo usermod -aG docker "$docker_user"
-sudo systemctl enable --now docker.service containerd.service
-
-echo "tools: $docker_user was added to the docker group; log out and back in to apply it"
+sh "$system_dir/post-install.sh" "$docker_user"
 
 prepare_binary_installation "$home_dir"
 

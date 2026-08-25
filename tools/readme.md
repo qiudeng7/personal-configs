@@ -52,8 +52,10 @@ Ubuntu 还通过系统内的工具函数安装 `helm`、`kubectl` 和 Mike Farah
 
 Ubuntu 安装按三个阶段执行：`prepare.sh` 配置 apt 前置依赖和 Docker 仓库；
 `install.sh` 是主入口，安装系统包及 Ubuntu-local 用户级工具；`post-install.sh`
-在 Docker 安装完成后配置服务和普通用户权限。各脚本文件头记录了调用顺序和关键
-依赖。
+在 Docker 安装完成后配置服务和普通用户权限。Arch 不需要 prepare 阶段，因为当前
+系统包都来自机器已有的 pacman 仓库；它只把 Docker 的普通用户权限和 systemd 服务
+配置拆到 `post-install.sh`。macOS 目前没有仓库准备、权限调整或服务启用步骤，
+所以保持单阶段 `install.sh`。各脚本文件头记录了调用顺序和关键依赖。
 
 macOS 脚本本身不调用 `sudo`。Arch 和 Ubuntu 的系统包安装会请求管理员权限，
 随后执行的用户级工具安装阶段不需要管理员权限。
