@@ -43,6 +43,10 @@ common 安装器保留各工具原有的版本检测、下载校验和可执行�
   指向 `fdfind` 的链接。Docker Engine、Buildx 和 Compose plugin 从 Docker
   官方 apt 仓库安装；脚本会先移除 Docker 官方文档列出的冲突包。
 
+Ubuntu 安装按三个阶段执行：`prepare.sh` 配置 apt 前置依赖和 Docker 仓库；
+`install.sh` 是主入口，安装系统包及 common 工具；`post-install.sh` 在 Docker
+安装完成后配置服务和普通用户权限。各脚本文件头记录了调用顺序和关键依赖。
+
 macOS 脚本本身不调用 `sudo`。Arch 和 Ubuntu 的系统包安装会请求管理员权限，
 随后执行的 common 安装阶段不需要管理员权限。
 
