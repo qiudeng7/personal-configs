@@ -6,7 +6,7 @@ import sys
 from typing import List
 
 
-FORMAT = re.compile(r"^[A-Za-z-]+\([A-Za-z/-]+\): (.*)$")
+FORMAT = re.compile(r"^[A-Za-z-]+\([A-Za-z0-9/-]+\): (.*)$")
 
 
 def contains_chinese(text: str) -> bool:
@@ -42,7 +42,7 @@ def main(args: List[str]) -> int:
         "提交信息首行格式不正确。\n\n"
         "要求：type(domain): 中文消息\n"
         "  type   只能包含英文字母和连字符 (-)\n"
-        "  domain 只能包含英文字母、连字符 (-) 和斜杠 (/)\n"
+        "  domain 只能包含英文字母、数字、连字符 (-) 和斜杠 (/)\n"
         "  消息   必须至少包含一个中文字符\n"
         "  其他行不受约束\n\n"
         "示例：feat(git-hooks): 添加提交信息校验",
