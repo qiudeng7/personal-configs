@@ -1,6 +1,6 @@
 ---
 name: ui-vercel
-description: Design or implement restrained, precise, product-led web interfaces inspired by Vercel's visual language. Use when choosing or adapting console, launch, homepage, docs, template gallery, creation wizard, settings, changelog, or pricing patterns across Vue, React, server templates, or native HTML and CSS. Do not use to copy Vercel trademarks, copy, or existing product pages.
+description: Design or implement restrained, precise, product-led web interfaces inspired by Vercel's visual language. Use only when the user's current request explicitly mentions Vercel or asks for a Vercel-style interface. Do not invoke for generic UI or frontend work, even when similar patterns might fit. Do not copy Vercel trademarks, copy, or existing product pages.
 ---
 
 # Vercel-style UI
